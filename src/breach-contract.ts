@@ -36,16 +36,17 @@ export function isMainnetPlaceholder(): boolean {
   return false
 }
 
-/** Resolve the active contract address for a given chain ID */
+/** Resolve the active contract address for a given chain ID.
+ *  Defaults to Arc Mainnet when no wallet is connected (chainId undefined). */
 export function getContractAddress(chainId: number | undefined): `0x${string}` {
-  return chainId === ARC_MAINNET_CHAIN_ID
-    ? getMainnetAddress()
-    : BREACH_SLA_ADDRESS_TESTNET
+  if (chainId === ARC_TESTNET_CHAIN_ID) return BREACH_SLA_ADDRESS_TESTNET
+  // undefined (no wallet) or ARC_MAINNET_CHAIN_ID → mainnet
+  return getMainnetAddress()
 }
 
-/** True when the active chain is Arc Mainnet */
+/** True when the active chain is Arc Mainnet OR no wallet connected (default to mainnet) */
 export function isMainnet(chainId: number | undefined): boolean {
-  return chainId === ARC_MAINNET_CHAIN_ID
+  return chainId !== ARC_TESTNET_CHAIN_ID
 }
 
 /** True when the active chain is Arc (mainnet or testnet) */
@@ -56,9 +57,10 @@ export function isArcChain(chainId: number | undefined): boolean {
 // ── Explorer helpers (chain-aware) ────────────────────────────────────────────
 
 export function explorerBase(chainId: number | undefined): string {
-  return chainId === ARC_MAINNET_CHAIN_ID
-    ? 'https://explorer.arc.io'
-    : 'https://explorer.testnet.arc.io'
+  // Only use testnet explorer when explicitly on testnet; undefined → mainnet
+  return chainId === ARC_TESTNET_CHAIN_ID
+    ? 'https://explorer.testnet.arc.io'
+    : 'https://explorer.arc.io'
 }
 
 export function buildTxUrl(txHash: string, chainId?: number): string {

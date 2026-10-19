@@ -27,8 +27,8 @@ export default function TelemetryBar({ onFaqOpen }: TelemetryBarProps) {
   const [walletMenuOpen, setWalletMenuOpen] = useState(false)
   const walletMenuRef = useRef<HTMLDivElement>(null)
 
-  const onMainnet = isMainnet(chainId)
-  const activeChainId = onMainnet ? ARC_MAINNET_CHAIN_ID : ARC_TESTNET_CHAIN_ID
+  const onMainnet = isMainnet(chainId) // true when undefined (no wallet) or on mainnet
+  const activeChainId = chainId === ARC_TESTNET_CHAIN_ID ? ARC_TESTNET_CHAIN_ID : ARC_MAINNET_CHAIN_ID
   const contractAddress = getContractAddress(chainId)
 
   // Close wallet menu on outside click
