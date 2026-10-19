@@ -11,12 +11,15 @@ import {
   buildAddressUrl,
   getContractAddress,
   isMainnet,
-  isArcChain,
 } from '../breach-contract'
 import { getUsdc } from '../onchain-facts'
 import { erc20Abi } from 'viem'
 
-export default function TelemetryBar() {
+interface TelemetryBarProps {
+  onFaqOpen: () => void
+}
+
+export default function TelemetryBar({ onFaqOpen }: TelemetryBarProps) {
   const { address, chainId } = useAccount()
   const { disconnect } = useDisconnect()
   const { connect } = useConnect()
@@ -25,7 +28,6 @@ export default function TelemetryBar() {
   const walletMenuRef = useRef<HTMLDivElement>(null)
 
   const onMainnet = isMainnet(chainId)
-  const onArc     = isArcChain(chainId)
   const activeChainId = onMainnet ? ARC_MAINNET_CHAIN_ID : ARC_TESTNET_CHAIN_ID
   const contractAddress = getContractAddress(chainId)
 
@@ -97,11 +99,6 @@ export default function TelemetryBar() {
     }
   }
 
-  const networkLabel = onMainnet ? 'arc-mainnet' : onArc ? 'arc-testnet' : chainId ? `chain:${chainId}` : 'no network'
-  const networkDotColor = onMainnet ? 'var(--pass)' : onArc ? 'var(--text-2)' : 'var(--warn)'
-  const networkTextColor = onArc ? 'var(--text-2)' : 'var(--warn)'
-  const switchTargetLabel = onMainnet ? '→ Testnet' : '→ Mainnet'
-
   return (
     <header className="sticky top-0 z-50" style={{ background: 'rgba(9,9,11,0.88)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', borderBottom: '1px solid var(--border)' }}>
 
@@ -118,36 +115,15 @@ export default function TelemetryBar() {
           <span className="hidden sm:block text-xs" style={{ color: 'var(--text-3)' }}>SLA Escrow</span>
         </div>
 
-        {/* Center: network switcher + contract pill + deploy button */}
+        {/* Center: contract pill */}
         <div className="flex items-center gap-2 flex-1 justify-center min-w-0">
 
-          {/* Network pill — clickable switcher */}
-          <button
-            onClick={() => void switchNetwork()}
-            className="group flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors duration-150 hover:bg-white/[0.05]"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-            title={`Switch to ${onMainnet ? 'Arc Testnet' : 'Arc Mainnet'}`}
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full shrink-0"
-              style={{
-                background: networkDotColor,
-                boxShadow: onArc ? `0 0 0 2px ${onMainnet ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.08)'}` : 'none',
-              }}
-            />
-            <span className="mono text-[11px] font-500" style={{ color: networkTextColor }}>
-              {networkLabel}
+          {/* Contract address pill with label */}
+          <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-md" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <span className="text-[10px] font-500 uppercase tracking-wider" style={{ color: 'var(--text-4)', letterSpacing: '0.06em' }}>
+              {onMainnet ? 'Mainnet Contract' : 'Testnet Contract'}
             </span>
-            <span
-              className="mono text-[9px] opacity-0 group-hover:opacity-70 transition-opacity ml-0.5"
-              style={{ color: 'var(--text-4)' }}
-            >
-              {switchTargetLabel}
-            </span>
-          </button>
-
-          {/* Contract address pill */}
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <span className="w-px h-3 shrink-0" style={{ background: 'var(--border-strong)' }} />
             <span className="mono text-[11px]" style={{ color: 'var(--text-3)' }}>
               {formatAddress(contractAddress)}
             </span>
@@ -170,6 +146,16 @@ export default function TelemetryBar() {
               <ArrowUpRight className="w-3 h-3" style={{ color: 'var(--text-4)' }} />
             </a>
           </div>
+
+          {/* FAQ pill */}
+          <button
+            onClick={onFaqOpen}
+            className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-500 transition-colors duration-150 hover:bg-white/[0.05]"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text-3)' }}
+          >
+            <span className="mono text-[10px] font-600" style={{ color: 'var(--text-4)' }}>?</span>
+            <span>FAQ</span>
+          </button>
 
         </div>
 
