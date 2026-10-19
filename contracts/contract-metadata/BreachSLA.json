@@ -1,0 +1,821 @@
+{
+  "contractAddress": "0x97b3d5b8b6fcc2cbb79daac53f057f3f34dfcfd4",
+  "network": "ARC-TESTNET",
+  "deployerWalletId": "3c2464b2-8369-52e2-a782-800bbeca5396",
+  "contract_code_path": "/home/user/app/contracts/BreachSLA.sol",
+  "contract_compiled_code_path": "/home/user/app/contracts/out/BreachSLA.sol/BreachSLA.json",
+  "contract_network_and_links": {
+    "Arc Testnet": "https://explorer.testnet.arc.io/address/0x97b3d5b8b6fcc2cbb79daac53f057f3f34dfcfd4"
+  },
+  "contract_deployments": [
+    {
+      "chain": "Arc Testnet",
+      "address": "0x97b3d5b8b6fcc2cbb79daac53f057f3f34dfcfd4",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x97b3d5b8b6fcc2cbb79daac53f057f3f34dfcfd4",
+      "txHash": "0x5604103dfedd41f24c4fc838a07689f164cdded3ab952f3243361f0febe924a8",
+      "deployedAt": "2026-10-18T16:46:18.262Z"
+    },
+    {
+      "chain": "Arc Testnet",
+      "address": "0x97b3d5b8b6fcc2cbb79daac53f057f3f34dfcfd4",
+      "explorerUrl": "https://explorer.testnet.arc.io/address/0x97b3d5b8b6fcc2cbb79daac53f057f3f34dfcfd4",
+      "txHash": "0x5604103dfedd41f24c4fc838a07689f164cdded3ab952f3243361f0febe924a8",
+      "deployedAt": "2026-10-18T14:44:41.360Z"
+    }
+  ],
+  "abi": [
+    {
+      "type": "function",
+      "name": "BPS_DENOMINATOR",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "MAX_SPLIT_BPS",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "claimTimeoutRefund",
+      "inputs": [
+        {
+          "name": "_id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "createSLA",
+      "inputs": [
+        {
+          "name": "_provider",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_treasury",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "_treasurySplitBps",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_maxLatencyMs",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_timeoutSeconds",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_endpointName",
+          "type": "string",
+          "internalType": "string"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "payable"
+    },
+    {
+      "type": "function",
+      "name": "getActiveSLAs",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "activeSLAs",
+          "type": "tuple[]",
+          "internalType": "struct BreachSLA.SLAContract[]",
+          "components": [
+            {
+              "name": "id",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "caller",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "provider",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "treasury",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "treasurySplitBps",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "maxLatencyMs",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "actualLatencyMs",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "deadline",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "payloadHash",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            },
+            {
+              "name": "endpointName",
+              "type": "string",
+              "internalType": "string"
+            },
+            {
+              "name": "status",
+              "type": "uint8",
+              "internalType": "enum BreachSLA.Status"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getAllSLAs",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "allSLAs",
+          "type": "tuple[]",
+          "internalType": "struct BreachSLA.SLAContract[]",
+          "components": [
+            {
+              "name": "id",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "caller",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "provider",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "treasury",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "treasurySplitBps",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "maxLatencyMs",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "actualLatencyMs",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "deadline",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "payloadHash",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            },
+            {
+              "name": "endpointName",
+              "type": "string",
+              "internalType": "string"
+            },
+            {
+              "name": "status",
+              "type": "uint8",
+              "internalType": "enum BreachSLA.Status"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getSLA",
+      "inputs": [
+        {
+          "name": "_id",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "tuple",
+          "internalType": "struct BreachSLA.SLAContract",
+          "components": [
+            {
+              "name": "id",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "caller",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "provider",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "treasury",
+              "type": "address",
+              "internalType": "address"
+            },
+            {
+              "name": "amount",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "treasurySplitBps",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "maxLatencyMs",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "actualLatencyMs",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "createdAt",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "deadline",
+              "type": "uint256",
+              "internalType": "uint256"
+            },
+            {
+              "name": "payloadHash",
+              "type": "bytes32",
+              "internalType": "bytes32"
+            },
+            {
+              "name": "endpointName",
+              "type": "string",
+              "internalType": "string"
+            },
+            {
+              "name": "status",
+              "type": "uint8",
+              "internalType": "enum BreachSLA.Status"
+            }
+          ]
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getStats",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "_totalVolume",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_totalSettled",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_totalRefunded",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_settledCount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_avgLatencyMs",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_successRate",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "pendingWithdrawals",
+      "inputs": [
+        {
+          "name": "",
+          "type": "address",
+          "internalType": "address"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "resolveSLA",
+      "inputs": [
+        {
+          "name": "_id",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_actualLatencyMs",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "_validSchema",
+          "type": "bool",
+          "internalType": "bool"
+        },
+        {
+          "name": "_payloadHash",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        }
+      ],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "function",
+      "name": "settledCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "slaContracts",
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "outputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "caller",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "provider",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "treasury",
+          "type": "address",
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "treasurySplitBps",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "maxLatencyMs",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "actualLatencyMs",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "createdAt",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "deadline",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "name": "payloadHash",
+          "type": "bytes32",
+          "internalType": "bytes32"
+        },
+        {
+          "name": "endpointName",
+          "type": "string",
+          "internalType": "string"
+        },
+        {
+          "name": "status",
+          "type": "uint8",
+          "internalType": "enum BreachSLA.Status"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "slaCount",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "totalLatencyMs",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "totalRefunded",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "totalSettled",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "totalVolume",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "withdraw",
+      "inputs": [],
+      "outputs": [],
+      "stateMutability": "nonpayable"
+    },
+    {
+      "type": "event",
+      "name": "SLABreached",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "caller",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "actualLatencyMs",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "reason",
+          "type": "string",
+          "indexed": false,
+          "internalType": "string"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "SLACreated",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "caller",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "provider",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "treasury",
+          "type": "address",
+          "indexed": false,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "maxLatencyMs",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "deadline",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "endpointName",
+          "type": "string",
+          "indexed": false,
+          "internalType": "string"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "SLASettled",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "uint256",
+          "indexed": true,
+          "internalType": "uint256"
+        },
+        {
+          "name": "provider",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "treasury",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "providerAmount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "treasuryAmount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "actualLatencyMs",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        },
+        {
+          "name": "payloadHash",
+          "type": "bytes32",
+          "indexed": false,
+          "internalType": "bytes32"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "event",
+      "name": "Withdrawn",
+      "inputs": [
+        {
+          "name": "recipient",
+          "type": "address",
+          "indexed": true,
+          "internalType": "address"
+        },
+        {
+          "name": "amount",
+          "type": "uint256",
+          "indexed": false,
+          "internalType": "uint256"
+        }
+      ],
+      "anonymous": false
+    },
+    {
+      "type": "error",
+      "name": "DeadlineExpired",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "DeadlineNotExpired",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidAmount",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidDeadline",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidProvider",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidSplitBps",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "InvalidTreasury",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "NotAuthorized",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "ReentrancyGuardReentrantCall",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "SLANotActive",
+      "inputs": []
+    },
+    {
+      "type": "error",
+      "name": "TransferFailed",
+      "inputs": []
+    }
+  ]
+}
