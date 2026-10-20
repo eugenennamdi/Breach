@@ -18,6 +18,7 @@ import {
 interface SLACardProps {
   sla: SLAContract
   chainId: number | undefined
+  connectedAddress?: `0x${string}`
   onResolved: () => void
 }
 
@@ -47,7 +48,8 @@ function ExplorerLink({ address, chainId }: { address: string; chainId: number |
   )
 }
 
-export default function SLACard({ sla, chainId, onResolved }: SLACardProps) {
+export default function SLACard({ sla, chainId, connectedAddress, onResolved }: SLACardProps) {
+  const addrLower = connectedAddress?.toLowerCase()
   const [expanded, setExpanded] = useState(true)
   const [passError, setPassError] = useState<string | null>(null)
   const [breachError, setBreachError] = useState<string | null>(null)
@@ -185,9 +187,9 @@ export default function SLACard({ sla, chainId, onResolved }: SLACardProps) {
 
           {/* Meta grid */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <MetaRow label="Caller"    value={formatAddress(sla.caller)}   mono />
-            <MetaRow label="Provider"  value={formatAddress(sla.provider)} mono />
-            <MetaRow label="Treasury"  value={formatAddress(sla.treasury)} mono />
+            <MetaRow label="Caller"   value={formatAddress(sla.caller)}   mono you={addrLower === sla.caller.toLowerCase()} />
+            <MetaRow label="Provider" value={formatAddress(sla.provider)} mono you={addrLower === sla.provider.toLowerCase()} />
+            <MetaRow label="Treasury" value={formatAddress(sla.treasury)} mono you={addrLower === sla.treasury.toLowerCase()} />
             <MetaRow
               label="Deadline"
               value={deadlineDate.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
@@ -328,12 +330,22 @@ export default function SLACard({ sla, chainId, onResolved }: SLACardProps) {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function MetaRow({ label, value, mono, warn, pass, fail }: { label: string; value: string; mono?: boolean; warn?: boolean; pass?: boolean; fail?: boolean }) {
+function MetaRow({ label, value, mono, warn, pass, fail, you }: { label: string; value: string; mono?: boolean; warn?: boolean; pass?: boolean; fail?: boolean; you?: boolean }) {
   const color = fail ? 'var(--breach)' : pass ? 'var(--pass)' : warn ? 'var(--warn)' : 'var(--text-2)'
   return (
     <div>
       <div className="text-[10px] font-500 uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-4)', letterSpacing: '0.06em' }}>{label}</div>
-      <div className={`text-[12px] font-500 tabular-nums ${mono ? 'mono' : ''}`} style={{ color }}>{value}</div>
+      <div className="flex items-center gap-1.5">
+        <div className={`text-[12px] font-500 tabular-nums ${mono ? 'mono' : ''}`} style={{ color }}>{value}</div>
+        {you && (
+          <span
+            className="text-[9px] font-700 px-1 py-px rounded uppercase tracking-widest"
+            style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-3)', letterSpacing: '0.1em' }}
+          >
+            YOU
+          </span>
+        )}
+      </div>
     </div>
   )
 }

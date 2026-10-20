@@ -1,19 +1,19 @@
 import { useState } from 'react'
-import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { Inbox, Loader2, ArrowDownToLine } from 'lucide-react'
 import {
   BREACH_SLA_ABI,
-  ARC_TESTNET_CHAIN_ID,
-  ARC_MAINNET_CHAIN_ID,
   SLAContract,
+  SLAStatus,
   formatNativeToUsdc,
   getContractAddress,
-  isArcChain,
   parseOnchainError,
 } from '../breach-contract'
+import { useAllSLAs, usePendingWithdrawals, type SelectedNetwork } from '../hooks/useBreachReads'
 import SLACard from './SLACard'
 
 type Tab = 'all' | 'active' | 'settled' | 'breached'
+type FeedMode = 'protocol' | 'mine'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'all',      label: 'All' },
@@ -25,29 +25,25 @@ const TABS: { id: Tab; label: string }[] = [
 interface SLADeskPanelProps {
   refetchKey: number
   onResolved: () => void
+  network: SelectedNetwork
+  onNetworkChange: (n: SelectedNetwork) => void
 }
 
-export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelProps) {
+export default function SLADeskPanel({ refetchKey, onResolved, network, onNetworkChange }: SLADeskPanelProps) {
   const [tab, setTab] = useState<Tab>('all')
+  const [feedMode, setFeedMode] = useState<FeedMode>('protocol')
   const [withdrawError, setWithdrawError] = useState<string | null>(null)
-  const { address, chainId } = useAccount()
 
-  const onArc = isArcChain(chainId)
-  const activeChainId = chainId === ARC_MAINNET_CHAIN_ID ? ARC_MAINNET_CHAIN_ID : ARC_TESTNET_CHAIN_ID
-  const contractAddress = getContractAddress(chainId)
+  const { address } = useAccount()
+  const contractAddress = getContractAddress(network === 'mainnet' ? 5042 : 5042002)
+  const chainId = network === 'mainnet' ? 5042 : 5042002
 
-  // Pull-payment: read pending withdrawals for connected wallet
-  const { data: pendingRaw, refetch: refetchPending } = useReadContract({
-    address: contractAddress,
-    abi: BREACH_SLA_ABI,
-    functionName: 'pendingWithdrawals',
-    args: address ? [address] : undefined,
-    chainId: activeChainId,
-    query: { enabled: !!address && onArc, refetchInterval: 5000 },
-  })
-  const pendingAmount = (pendingRaw) ?? 0n
+  // ── dedicated reads (decoupled from wallet chain) ─────────────────────────
+  const { slas, loading, refetch } = useAllSLAs(network, refetchKey)
+  const { amount: pendingAmount, refetch: refetchPending } = usePendingWithdrawals(network, address)
   const hasPending = pendingAmount > 0n
 
+  // ── withdraw (wallet tx — still needs wallet on correct chain) ────────────
   const { writeContract: doWithdraw, data: withdrawTxHash, isPending: isWithdrawPending, reset: resetWithdraw } = useWriteContract()
   const { isLoading: isWithdrawConfirming, isSuccess: isWithdrawSuccess } = useWaitForTransactionReceipt({ hash: withdrawTxHash })
 
@@ -55,7 +51,7 @@ export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelPro
     setWithdrawError(null)
     resetWithdraw()
     doWithdraw(
-      { address: contractAddress, abi: BREACH_SLA_ABI, functionName: 'withdraw', chainId: activeChainId },
+      { address: contractAddress, abi: BREACH_SLA_ABI, functionName: 'withdraw', chainId },
       {
         onSuccess: () => void refetchPending(),
         onError: (e) => setWithdrawError(parseOnchainError(e)),
@@ -63,30 +59,36 @@ export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelPro
     )
   }
 
-  const { data: rawSLAs, isLoading, refetch } = useReadContract({
-    address: contractAddress,
-    abi: BREACH_SLA_ABI,
-    functionName: 'getAllSLAs',
-    chainId: activeChainId,
-    query: { refetchInterval: 5000 },
-  })
+  // ── filter pipeline ───────────────────────────────────────────────────────
+  // 1. Protocol / My SLAs
+  const addrLower = address?.toLowerCase()
+  const feedFiltered: SLAContract[] = feedMode === 'protocol'
+    ? slas
+    : slas.filter((s) =>
+        addrLower && (
+          s.caller.toLowerCase()   === addrLower ||
+          s.provider.toLowerCase() === addrLower ||
+          s.treasury.toLowerCase() === addrLower
+        )
+      )
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  if (refetchKey > 0) void refetch()
+  // 2. Status tab — compare as plain numbers to avoid enum-comparison lint errors
+  const ACTIVE = SLAStatus.ACTIVE as number
+  const SETTLED = SLAStatus.SETTLED as number
+  const BREACHED = SLAStatus.BREACHED_REFUNDED as number
 
-  const slas = ([...(rawSLAs ?? [])].reverse()) as unknown as SLAContract[]
+  const filtered = tab === 'all' ? feedFiltered
+    : tab === 'active'   ? feedFiltered.filter(s => s.status === ACTIVE)
+    : tab === 'settled'  ? feedFiltered.filter(s => s.status === SETTLED)
+    : feedFiltered.filter(s => s.status === BREACHED)
 
+  // counts from feed-filtered (not protocol-total) so tabs reflect the current feed
   const counts = {
-    all:      slas.length,
-    active:   slas.filter(s => s.status === 0).length,
-    settled:  slas.filter(s => s.status === 1).length,
-    breached: slas.filter(s => s.status === 2).length,
+    all:      feedFiltered.length,
+    active:   feedFiltered.filter(s => s.status === ACTIVE).length,
+    settled:  feedFiltered.filter(s => s.status === SETTLED).length,
+    breached: feedFiltered.filter(s => s.status === BREACHED).length,
   }
-
-  const filtered = tab === 'all' ? slas
-    : tab === 'active'   ? slas.filter(s => s.status === 0)
-    : tab === 'settled'  ? slas.filter(s => s.status === 1)
-    : slas.filter(s => s.status === 2)
 
   return (
     <section className="rounded-xl overflow-hidden flex flex-col" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
@@ -102,7 +104,30 @@ export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelPro
               Live onchain SLA escrows — click to expand and resolve.
             </p>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+
+          {/* Right: network toggle + live dot */}
+          <div className="flex items-center gap-2 shrink-0 mt-0.5">
+            {/* Network toggle */}
+            <div
+              className="flex rounded-md overflow-hidden"
+              style={{ border: '1px solid var(--border)', background: 'var(--surface-inset)' }}
+            >
+              {(['mainnet', 'testnet'] as SelectedNetwork[]).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => onNetworkChange(n)}
+                  className="px-2.5 py-1 text-[10px] font-500 uppercase tracking-wider transition-colors duration-150"
+                  style={{
+                    color: network === n ? 'var(--text-primary)' : 'var(--text-4)',
+                    background: network === n ? 'var(--surface-raised)' : 'transparent',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {n === 'mainnet' ? 'Mainnet' : 'Testnet'}
+                </button>
+              ))}
+            </div>
+
             <span
               className="w-1.5 h-1.5 rounded-full live-dot"
               style={{ background: counts.active > 0 ? 'var(--pass)' : 'var(--text-4)' }}
@@ -112,7 +137,7 @@ export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelPro
         </div>
 
         {/* Pending withdrawals claim bar */}
-        {address && onArc && (
+        {address && (
           <div
             className="flex items-center gap-3 px-3.5 py-2.5 rounded-lg mb-4"
             style={{
@@ -160,41 +185,69 @@ export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelPro
           <div className="text-[11px] mb-3 px-1" style={{ color: 'var(--breach)' }}>{withdrawError}</div>
         )}
 
-        {/* Tab bar */}
-        <div className="flex gap-0" style={{ borderBottom: '1px solid var(--border)' }}>
-          {TABS.map((t) => (
+        {/* Tab bar + Protocol/My SLAs toggle */}
+        <div className="flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+          {/* Status tabs */}
+          <div className="flex gap-0">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className="flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-500 transition-colors duration-150 relative"
+                style={{ color: tab === t.id ? 'var(--text-primary)' : 'var(--text-4)' }}
+              >
+                {t.label}
+                {counts[t.id] > 0 && (
+                  <span
+                    className="mono text-[9px] px-1 rounded"
+                    style={{
+                      background: tab === t.id ? 'rgba(255,255,255,0.1)' : 'var(--surface-inset)',
+                      color: tab === t.id ? 'var(--text-2)' : 'var(--text-4)',
+                    }}
+                  >
+                    {counts[t.id]}
+                  </span>
+                )}
+                {tab === t.id && (
+                  <span className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--text-primary)' }} />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Feed mode segmented toggle */}
+          <div
+            className="flex rounded-md overflow-hidden mr-0 mb-1"
+            style={{ border: '1px solid var(--border)', background: 'var(--surface-inset)' }}
+          >
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className="flex items-center gap-1.5 px-4 py-2.5 text-[11px] font-500 transition-colors duration-150 relative"
-              style={{ color: tab === t.id ? 'var(--text-primary)' : 'var(--text-4)' }}
+              onClick={() => setFeedMode('protocol')}
+              className="px-3 py-1.5 text-[10px] font-500 transition-colors duration-150"
+              style={{
+                color: feedMode === 'protocol' ? 'var(--text-primary)' : 'var(--text-4)',
+                background: feedMode === 'protocol' ? 'var(--surface-raised)' : 'transparent',
+              }}
             >
-              {t.label}
-              {counts[t.id] > 0 && (
-                <span
-                  className="mono text-[9px] px-1 rounded"
-                  style={{
-                    background: tab === t.id ? 'rgba(255,255,255,0.1)' : 'var(--surface-inset)',
-                    color: tab === t.id ? 'var(--text-2)' : 'var(--text-4)',
-                  }}
-                >
-                  {counts[t.id]}
-                </span>
-              )}
-              {tab === t.id && (
-                <span
-                  className="absolute bottom-0 left-0 right-0 h-px"
-                  style={{ background: 'var(--text-primary)' }}
-                />
-              )}
+              Protocol Feed
             </button>
-          ))}
+            <button
+              onClick={() => setFeedMode('mine')}
+              className="px-3 py-1.5 text-[10px] font-500 transition-colors duration-150"
+              style={{
+                color: feedMode === 'mine' ? 'var(--text-primary)' : 'var(--text-4)',
+                background: feedMode === 'mine' ? 'var(--surface-raised)' : 'transparent',
+                borderLeft: '1px solid var(--border)',
+              }}
+            >
+              My SLAs
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Body */}
       <div className="p-4 flex flex-col gap-2.5">
-        {isLoading && (
+        {loading && (
           <>
             {[0, 1].map((i) => (
               <div key={i} className="rounded-xl h-16 animate-pulse" style={{ background: 'var(--surface-inset)' }} />
@@ -202,13 +255,19 @@ export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelPro
           </>
         )}
 
-        {!isLoading && filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--surface-inset)', border: '1px solid var(--border)' }}>
-              <Inbox className="w-4.5 h-4.5" style={{ color: 'var(--text-4)' }} />
+              <Inbox className="w-4 h-4" style={{ color: 'var(--text-4)' }} />
             </div>
-            <p className="text-[12px]" style={{ color: 'var(--text-4)' }}>
-              {tab === 'all' ? 'No SLAs deployed yet.' : `No ${tab} SLAs.`}
+            <p className="text-[12px] text-center max-w-[260px]" style={{ color: 'var(--text-4)' }}>
+              {feedMode === 'mine' && address
+                ? `No SLAs found for ${address.slice(0, 6)}…${address.slice(-4)} — switch to Protocol Feed to view global onchain activity.`
+                : feedMode === 'mine' && !address
+                  ? 'Connect your wallet to see your SLAs.'
+                  : tab === 'all'
+                    ? 'No SLAs on this network yet.'
+                    : `No ${tab} SLAs.`}
             </p>
           </div>
         )}
@@ -218,6 +277,7 @@ export default function SLADeskPanel({ refetchKey, onResolved }: SLADeskPanelPro
             key={sla.id.toString()}
             sla={sla}
             chainId={chainId}
+            connectedAddress={address}
             onResolved={() => { onResolved(); void refetch() }}
           />
         ))}
