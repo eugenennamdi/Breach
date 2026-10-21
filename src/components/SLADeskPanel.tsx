@@ -10,6 +10,7 @@ import {
   parseOnchainError,
 } from '../breach-contract'
 import { useAllSLAs, usePendingWithdrawals, type SelectedNetwork } from '../hooks/useBreachReads'
+import { useSLATxHashes } from '../hooks/useSLATxHashes'
 import SLACard from './SLACard'
 
 type Tab = 'all' | 'active' | 'settled' | 'breached'
@@ -41,6 +42,7 @@ export default function SLADeskPanel({ refetchKey, onResolved, network, onNetwor
   // ── dedicated reads (decoupled from wallet chain) ─────────────────────────
   const { slas, loading, refetch } = useAllSLAs(network, refetchKey)
   const { amount: pendingAmount, refetch: refetchPending } = usePendingWithdrawals(network, address)
+  const { txMap, capture } = useSLATxHashes(network)
   const hasPending = pendingAmount > 0n
 
   // ── withdraw (wallet tx — still needs wallet on correct chain) ────────────
@@ -278,6 +280,8 @@ export default function SLADeskPanel({ refetchKey, onResolved, network, onNetwor
             sla={sla}
             chainId={chainId}
             connectedAddress={address}
+            txHashes={txMap.get(sla.id.toString())}
+            onCaptureTx={capture}
             onResolved={() => { onResolved(); void refetch() }}
           />
         ))}

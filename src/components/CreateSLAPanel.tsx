@@ -44,7 +44,8 @@ const PRESETS: Preset[] = [
 
 const CHIPS = ['0.01', '0.05', '0.10', '0.25']
 
-export default function CreateSLAPanel({ onCreated }: { onCreated: () => void }) {
+// onCaptureTx reserved for future use (create tx id resolved by log indexer)
+export default function CreateSLAPanel({ onCreated, onCaptureTx: _onCaptureTx }: { onCreated: () => void; onCaptureTx?: (slaId: string, hash: `0x${string}`, kind: 'create' | 'resolve') => void }) {
   const { address, chainId, isConnected } = useAccount()
   const { switchChain } = useSwitchChain()
 

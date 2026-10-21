@@ -10,15 +10,17 @@ import {
   formatNativeToUsdc,
   formatAddress,
   buildTxUrl,
-  buildAddressUrl,
   getContractAddress,
   parseOnchainError,
 } from '../breach-contract'
+import type { TxHashes } from '../hooks/useSLATxHashes'
 
 interface SLACardProps {
   sla: SLAContract
   chainId: number | undefined
   connectedAddress?: `0x${string}`
+  txHashes?: TxHashes
+  onCaptureTx?: (slaId: string, hash: `0x${string}`, kind: 'create' | 'resolve') => void
   onResolved: () => void
 }
 
@@ -33,22 +35,24 @@ function useCopy() {
   return { copied, copy }
 }
 
-function ExplorerLink({ address, chainId }: { address: string; chainId: number | undefined }) {
+function TxExplorerLink({ txHash, chainId }: { txHash: `0x${string}` | undefined; chainId: number | undefined }) {
+  if (!txHash) return null
   return (
     <a
-      href={buildAddressUrl(address, chainId)}
+      href={buildTxUrl(txHash, chainId)}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-1 transition-opacity hover:opacity-60"
+      className="flex items-center gap-1.5 transition-opacity hover:opacity-60"
       style={{ color: 'var(--text-4)' }}
     >
-      <span className="text-[10px]">View on Explorer</span>
+      <span className="mono text-[10px] tabular-nums">{txHash.slice(0, 6)}…{txHash.slice(-4)}</span>
+      <span className="text-[10px]">· View on Explorer</span>
       <ExternalLink className="w-2.5 h-2.5" />
     </a>
   )
 }
 
-export default function SLACard({ sla, chainId, connectedAddress, onResolved }: SLACardProps) {
+export default function SLACard({ sla, chainId, connectedAddress, txHashes, onCaptureTx, onResolved }: SLACardProps) {
   const addrLower = connectedAddress?.toLowerCase()
   const [expanded, setExpanded] = useState(true)
   const [passError, setPassError] = useState<string | null>(null)
@@ -73,7 +77,10 @@ export default function SLACard({ sla, chainId, connectedAddress, onResolved }: 
     writeReclaim(
       { address: contractAddress, abi: BREACH_SLA_ABI, functionName: 'claimTimeoutRefund',
         args: [sla.id], chainId: activeChainId },
-      { onSuccess: () => setTimeout(onResolved, 2000), onError: (e) => setReclaimError(parseOnchainError(e)) }
+      {
+        onSuccess: (hash) => { onCaptureTx?.(slaIdStr, hash, 'resolve'); setTimeout(onResolved, 2000) },
+        onError: (e) => setReclaimError(parseOnchainError(e)),
+      }
     )
   }
 
@@ -94,13 +101,18 @@ export default function SLACard({ sla, chainId, connectedAddress, onResolved }: 
 
   const busy = isPassPending || isPassConfirming || isBreachPending || isBreachConfirming || isReclaimPending || isReclaimConfirming
 
+  const slaIdStr = sla.id.toString()
+
   const handlePass = () => {
     setPassError(null); resetBreach()
     writePass(
       { address: contractAddress, abi: BREACH_SLA_ABI, functionName: 'resolveSLA',
         args: [sla.id, 340n, true, '0x0000000000000000000000000000000000000000000000000000000000000000'],
         chainId: activeChainId },
-      { onSuccess: () => setTimeout(onResolved, 2000), onError: (e) => setPassError(parseOnchainError(e)) }
+      {
+        onSuccess: (hash) => { onCaptureTx?.(slaIdStr, hash, 'resolve'); setTimeout(onResolved, 2000) },
+        onError: (e) => setPassError(parseOnchainError(e)),
+      }
     )
   }
 
@@ -110,7 +122,10 @@ export default function SLACard({ sla, chainId, connectedAddress, onResolved }: 
       { address: contractAddress, abi: BREACH_SLA_ABI, functionName: 'resolveSLA',
         args: [sla.id, 2850n, false, '0x0000000000000000000000000000000000000000000000000000000000000000'],
         chainId: activeChainId },
-      { onSuccess: () => setTimeout(onResolved, 2000), onError: (e) => setBreachError(parseOnchainError(e)) }
+      {
+        onSuccess: (hash) => { onCaptureTx?.(slaIdStr, hash, 'resolve'); setTimeout(onResolved, 2000) },
+        onError: (e) => setBreachError(parseOnchainError(e)),
+      }
     )
   }
 
@@ -123,6 +138,12 @@ export default function SLACard({ sla, chainId, connectedAddress, onResolved }: 
 
   const latencyPassed = sla.actualLatencyMs > 0n && sla.actualLatencyMs <= sla.maxLatencyMs
   const latencyFailed = sla.actualLatencyMs > 0n && sla.actualLatencyMs > sla.maxLatencyMs
+
+  // tx hash for explorer links: prefer resolveTx for terminal states, createTx for active
+  const displayTxHash: `0x${string}` | undefined =
+    (isSettled || isBreached)
+      ? (txHashes?.resolveTxHash ?? txHashes?.createTxHash)
+      : txHashes?.createTxHash
 
   return (
     <article
@@ -224,7 +245,7 @@ export default function SLACard({ sla, chainId, connectedAddress, onResolved }: 
                 <div className="h-px my-0.5" style={{ background: 'var(--border)' }} />
                 <PayoutRow label="Total Settled" value={`${formatNativeToUsdc(totalAmount)} USDC`} bold />
                 <div className="flex justify-end mt-1">
-                  <ExplorerLink address={contractAddress} chainId={chainId} />
+                  <TxExplorerLink txHash={displayTxHash} chainId={chainId} />
                 </div>
               </div>
             </div>
@@ -244,7 +265,7 @@ export default function SLACard({ sla, chainId, connectedAddress, onResolved }: 
                   </div>
                 )}
                 <div className="flex justify-end mt-1">
-                  <ExplorerLink address={contractAddress} chainId={chainId} />
+                  <TxExplorerLink txHash={displayTxHash} chainId={chainId} />
                 </div>
               </div>
             </div>

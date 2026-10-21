@@ -6,6 +6,7 @@ import SLADeskPanel from './components/SLADeskPanel'
 import FAQModal from './components/FAQModal'
 import ConnectWalletModal from './components/ConnectWalletModal'
 import { type SelectedNetwork } from './hooks/useBreachReads'
+import { useSLATxHashes } from './hooks/useSLATxHashes'
 import { ArrowUpRight } from 'lucide-react'
 import { ARC_MAINNET_CHAIN_ID, ARC_TESTNET_CHAIN_ID } from './breach-contract'
 
@@ -32,6 +33,8 @@ export default function App() {
   if (chainId === ARC_TESTNET_CHAIN_ID && network !== 'testnet') setNetwork('testnet')
   if (chainId === ARC_MAINNET_CHAIN_ID && network !== 'mainnet') setNetwork('mainnet')
 
+  const { capture } = useSLATxHashes(network)
+
   const handleCreated = useCallback(() => {
     setRefetchKey((k) => k + 1)
   }, [])
@@ -57,7 +60,7 @@ export default function App() {
       <main className="max-w-[1360px] mx-auto px-4 md:px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-5 items-start">
           <div className="lg:sticky lg:top-[89px]">
-            <CreateSLAPanel onCreated={handleCreated} />
+            <CreateSLAPanel onCreated={handleCreated} onCaptureTx={capture} />
           </div>
           <div>
             <SLADeskPanel
