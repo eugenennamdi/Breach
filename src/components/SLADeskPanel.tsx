@@ -280,7 +280,7 @@ export default function SLADeskPanel({ refetchKey, onResolved, network, onNetwor
             sla={sla}
             chainId={chainId}
             connectedAddress={address}
-            txHashes={txMap.get(sla.id.toString())}
+            txHashes={txMap[sla.id.toString()]}
             onCaptureTx={capture}
             onResolved={() => { onResolved(); void refetch() }}
           />

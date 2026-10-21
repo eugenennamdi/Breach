@@ -10,16 +10,18 @@ import {
   formatNativeToUsdc,
   formatAddress,
   buildTxUrl,
+  buildAddressUrl,
+  BREACH_SLA_ADDRESS_MAINNET_STATIC,
   getContractAddress,
   parseOnchainError,
 } from '../breach-contract'
-import type { TxHashes } from '../hooks/useSLATxHashes'
+import type { SLATxEntry } from '../hooks/useSLATxHashes'
 
 interface SLACardProps {
   sla: SLAContract
   chainId: number | undefined
   connectedAddress?: `0x${string}`
-  txHashes?: TxHashes
+  txHashes?: SLATxEntry
   onCaptureTx?: (slaId: string, hash: `0x${string}`, kind: 'create' | 'resolve') => void
   onResolved: () => void
 }
@@ -36,16 +38,22 @@ function useCopy() {
 }
 
 function TxExplorerLink({ txHash, chainId }: { txHash: `0x${string}` | undefined; chainId: number | undefined }) {
-  if (!txHash) return null
+  // Always visible: if txHash is known, link to /tx/<hash>; otherwise fall back to /address/<contract>
+  const href = txHash
+    ? buildTxUrl(txHash, chainId)
+    : buildAddressUrl(BREACH_SLA_ADDRESS_MAINNET_STATIC, chainId)
+  const label = txHash
+    ? `${txHash.slice(0, 6)}…${txHash.slice(-4)}`
+    : 'contract'
   return (
     <a
-      href={buildTxUrl(txHash, chainId)}
+      href={href}
       target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-1.5 transition-opacity hover:opacity-60"
       style={{ color: 'var(--text-4)' }}
     >
-      <span className="mono text-[10px] tabular-nums">{txHash.slice(0, 6)}…{txHash.slice(-4)}</span>
+      <span className="mono text-[10px] tabular-nums">{label}</span>
       <span className="text-[10px]">· View on Explorer</span>
       <ExternalLink className="w-2.5 h-2.5" />
     </a>
@@ -140,10 +148,11 @@ export default function SLACard({ sla, chainId, connectedAddress, txHashes, onCa
   const latencyFailed = sla.actualLatencyMs > 0n && sla.actualLatencyMs > sla.maxLatencyMs
 
   // tx hash for explorer links: prefer resolveTx for terminal states, createTx for active
+  const entry: { createTxHash?: `0x${string}`; resolveTxHash?: `0x${string}` } = txHashes ?? {}
   const displayTxHash: `0x${string}` | undefined =
     (isSettled || isBreached)
-      ? (txHashes?.resolveTxHash ?? txHashes?.createTxHash)
-      : txHashes?.createTxHash
+      ? (entry.resolveTxHash ?? entry.createTxHash)
+      : entry.createTxHash
 
   return (
     <article
